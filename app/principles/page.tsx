@@ -554,8 +554,12 @@ export default function PrinciplesPage() {
   const [view, setView] = useState<"grid" | "line">("grid");
   const [targetView, setTargetView] = useState<"grid" | "line">("grid");
   const [activeCardIndex, setActiveCardIndex] = useState(0);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
+    null
+  );
   const activeCardIndexRef = useRef(0);
   const lineContainerRef = useRef<HTMLDivElement>(null);
+  const cardsWrapperRef = useRef<HTMLDivElement>(null);
 
   const handleViewChange = (newView: "grid" | "line") => {
     if (newView === view) return;
@@ -580,6 +584,8 @@ export default function PrinciplesPage() {
     ...delightfulCardsData,
   ];
 
+  // No need to scroll - cards are centered with flexbox
+
   // Keyboard navigation and vertical-to-horizontal scroll for line view
   useEffect(() => {
     if (view !== "line") return;
@@ -587,71 +593,34 @@ export default function PrinciplesPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!lineContainerRef.current) return;
 
-      const container = lineContainerRef.current;
-      const scrollAmount = 528 + 16; // card width + gap
-
       const currentIndex = activeCardIndexRef.current;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         const newIndex =
           currentIndex === 0 ? allCards.length - 1 : currentIndex - 1;
+        setSlideDirection("right"); // Cards slide right when going to previous
         activeCardIndexRef.current = newIndex;
         setActiveCardIndex(newIndex);
-        // Scroll to the new card position
-        if (newIndex === allCards.length - 1) {
-          // Scroll to the last card (which is repeated at the end)
-          const lastCardPosition =
-            (allCards.length - 1) * scrollAmount + scrollAmount;
-          container.scrollTo({ left: lastCardPosition, behavior: "smooth" });
-        } else {
-          container.scrollBy({ left: -scrollAmount, behavior: "smooth" });
-        }
+        setTimeout(() => setSlideDirection(null), 300); // Reset after animation
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         const newIndex =
           currentIndex === allCards.length - 1 ? 0 : currentIndex + 1;
+        setSlideDirection("left"); // Cards slide left when going to next
         activeCardIndexRef.current = newIndex;
         setActiveCardIndex(newIndex);
-        // Scroll to the new card position
-        if (newIndex === 0) {
-          // Scroll back to the beginning
-          container.scrollTo({ left: 0, behavior: "smooth" });
-        } else {
-          container.scrollBy({ left: scrollAmount, behavior: "smooth" });
-        }
+        setTimeout(() => setSlideDirection(null), 300); // Reset after animation
       }
-    };
-
-    const handleScroll = () => {
-      if (!lineContainerRef.current) return;
-      const container = lineContainerRef.current;
-      const scrollLeft = container.scrollLeft;
-      const cardWidth = 528;
-      const gap = 16;
-      const cardWithGap = cardWidth + gap;
-      // Account for the half-visible last card at the start (-264px)
-      const adjustedScroll = scrollLeft + 264;
-      const newIndex = Math.max(
-        0,
-        Math.min(allCards.length - 1, Math.round(adjustedScroll / cardWithGap))
-      );
-      activeCardIndexRef.current = newIndex;
-      setActiveCardIndex(newIndex);
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    const container = lineContainerRef.current;
-    if (container) {
-      container.addEventListener("scroll", handleScroll);
-    }
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
-      if (container) {
-        container.removeEventListener("scroll", handleScroll);
-      }
     };
   }, [view, allCards.length]);
+
+  // Drag interaction removed - using flexbox positioning instead
 
   // Prevent double scrollbars during transition
   useEffect(() => {
@@ -698,7 +667,10 @@ export default function PrinciplesPage() {
             view === "line" || targetView === "line" ? "100vh" : "auto",
         }}
       >
-        <div className="flex items-center justify-between mb-8">
+        <div
+          className="flex items-center justify-between mb-8"
+          style={{ position: "relative", zIndex: 40 }}
+        >
           <div className="flex items-center gap-3">
             <Link href="/" className="cursor-pointer">
               <svg
@@ -832,71 +804,166 @@ export default function PrinciplesPage() {
               paddingRight: "32px",
               paddingBottom: "1rem",
               backgroundColor: "transparent",
-              alignItems: "flex-start",
+              display: "flex",
+              alignItems: "center",
               paddingTop: "32px",
               overflowX: "hidden",
               overflowY: "hidden",
               opacity: view === "line" && targetView === "line" ? 1 : 0,
               transition: "opacity 125ms ease-out",
               minHeight: "calc(100vh - 300px)",
+              pointerEvents:
+                view === "line" && targetView === "line" ? "auto" : "none",
             }}
           >
-            {/* Repeat content: show last card first with negative margin */}
+            {/* Cards wrapper that slides - render all cards */}
             <div
-              key={`last-${allCards.length - 1}`}
+              ref={cardsWrapperRef}
               style={{
-                flexShrink: 0,
-                width: "528px",
-                marginLeft: "-396px", // Negative margin to show only 1/4 (hide 3/4)
-                opacity:
-                  activeCardIndex === allCards.length - 1
-                    ? 1
-                    : activeCardIndex === allCards.length - 2
-                    ? 0.5
-                    : 0.25,
-                transition: "opacity 0.2s ease-out",
+                display: "flex",
+                alignItems: "center",
+                gap: "16px",
+                transform: `translateX(calc(50vw - ${
+                  activeCardIndex * 544 + 264
+                }px))`,
+                transition: "transform 0.3s ease-out",
               }}
             >
-              <PrincipleCard {...allCards[allCards.length - 1]} />
+              {allCards.map((card, index) => {
+                const isActive = activeCardIndex === index;
+                const isPrev =
+                  activeCardIndex === 0
+                    ? index === allCards.length - 1
+                    : index === activeCardIndex - 1;
+                const isNext =
+                  activeCardIndex === allCards.length - 1
+                    ? index === 0
+                    : index === activeCardIndex + 1;
+                const opacity = isActive ? 1 : isPrev || isNext ? 0.5 : 0.25;
+                const scale = isActive ? 1 : 0.95;
+
+                return (
+                  <div
+                    key={index}
+                    data-card
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (!lineContainerRef.current) return;
+                      const direction =
+                        index > activeCardIndex
+                          ? "left"
+                          : index < activeCardIndex
+                          ? "right"
+                          : null;
+                      if (direction) {
+                        setSlideDirection(direction);
+                      }
+                      activeCardIndexRef.current = index;
+                      setActiveCardIndex(index);
+                      setTimeout(() => setSlideDirection(null), 300);
+                    }}
+                    style={{
+                      flexShrink: 0,
+                      width: "528px",
+                      opacity,
+                      transform: `scale(${scale})`,
+                      transition:
+                        "opacity 0.3s ease-out, transform 0.3s ease-out",
+                      cursor: "pointer",
+                      marginLeft: index === 0 ? "-264px" : "0px",
+                      marginRight:
+                        index === allCards.length - 1 ? "-264px" : "0px",
+                    }}
+                  >
+                    <PrincipleCard {...card} />
+                  </div>
+                );
+              })}
             </div>
-            {/* Original cards */}
-            {allCards.map((card, index) => {
-              const isActive = activeCardIndex === index;
-              const isNext = activeCardIndex === index - 1; // Previous card is next (to the right)
-              const opacity = isActive ? 1 : isNext ? 0.5 : 0.25;
-              return (
-                <div
-                  key={index}
-                  style={{
-                    flexShrink: 0,
-                    width: "528px",
-                    opacity,
-                    transition: "opacity 0.2s ease-out",
-                  }}
-                >
-                  <PrincipleCard {...card} />
-                </div>
-              );
-            })}
-            {/* Repeat cards for seamless loop */}
-            {allCards.map((card, index) => {
-              const isActive = activeCardIndex === index;
-              const isNext = activeCardIndex === index - 1; // Previous card is next (to the right)
-              const opacity = isActive ? 1 : isNext ? 0.5 : 0.25;
-              return (
-                <div
-                  key={`repeat-${index}`}
-                  style={{
-                    flexShrink: 0,
-                    width: "528px",
-                    opacity,
-                    transition: "opacity 0.2s ease-out",
-                  }}
-                >
-                  <PrincipleCard {...card} />
-                </div>
-              );
-            })}
+          </div>
+        )}
+
+        {/* Navigation buttons - Fixed at bottom */}
+        {view === "line" && (
+          <div
+            style={{
+              position: "fixed",
+              bottom: "24px",
+              left: "50%",
+              transform: "translateX(-50%)",
+              display: "flex",
+              gap: "8px",
+              zIndex: 50,
+            }}
+          >
+            <button
+              onClick={() => {
+                const currentIndex = activeCardIndexRef.current;
+                const newIndex =
+                  currentIndex === 0 ? allCards.length - 1 : currentIndex - 1;
+                setSlideDirection("right");
+                activeCardIndexRef.current = newIndex;
+                setActiveCardIndex(newIndex);
+                setTimeout(() => setSlideDirection(null), 300);
+              }}
+              style={{
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                fontSize: "14px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              ←
+            </button>
+            <button
+              onClick={() => {
+                const randomIndex = Math.floor(Math.random() * allCards.length);
+                activeCardIndexRef.current = randomIndex;
+                setActiveCardIndex(randomIndex);
+              }}
+              style={{
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                fontSize: "14px",
+                cursor: "pointer",
+              }}
+            >
+              Random
+            </button>
+            <button
+              onClick={() => {
+                const currentIndex = activeCardIndexRef.current;
+                const newIndex =
+                  currentIndex === allCards.length - 1 ? 0 : currentIndex + 1;
+                setSlideDirection("left");
+                activeCardIndexRef.current = newIndex;
+                setActiveCardIndex(newIndex);
+                setTimeout(() => setSlideDirection(null), 300);
+              }}
+              style={{
+                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                color: "white",
+                border: "none",
+                padding: "8px 16px",
+                borderRadius: "4px",
+                fontSize: "14px",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              →
+            </button>
           </div>
         )}
       </div>

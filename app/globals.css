@@ -189,6 +189,25 @@ a {
   background: #a0aec0;
 }
 
+/* Card animations for line view */
+@keyframes slideLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-544px); /* card width (528) + gap (16) */
+  }
+}
+
+@keyframes slideRight {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(544px); /* card width (528) + gap (16) */
+  }
+}
+
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 2.5rem;

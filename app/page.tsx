@@ -8,16 +8,16 @@ export default function Home() {
           interfaces. Start here to understand our principles, components, and
           patterns.
         </p>
-        
+
         <div className="grid">
-          <div className="card">
+          <a href="/principles" className="card">
             <h2>Principles</h2>
             <p>
               Our design principles guide every decision we make, ensuring
               consistency and clarity across all experiences.
             </p>
-          </div>
-          
+          </a>
+
           <div className="card">
             <h2>Components</h2>
             <p>
@@ -25,7 +25,7 @@ export default function Home() {
               system and user interfaces.
             </p>
           </div>
-          
+
           <div className="card">
             <h2>Patterns</h2>
             <p>
@@ -36,6 +36,5 @@ export default function Home() {
         </div>
       </div>
     </main>
-  )
+  );
 }
-

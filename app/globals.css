@@ -92,6 +92,22 @@ a {
   font-size: 0.95rem;
 }
 
+.principles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+  gap: 16px;
+  width: 100%;
+  justify-content: start;
+}
+
+.principles-grid > * {
+  min-width: 0;
+}
+
+.principles-grid > * {
+  min-width: 0;
+}
+
 @media (max-width: 768px) {
   .hero h1 {
     font-size: 2.5rem;
@@ -102,6 +118,10 @@ a {
   }
 
   .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .principles-grid {
     grid-template-columns: 1fr;
   }
 }

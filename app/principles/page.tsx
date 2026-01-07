@@ -547,122 +547,27 @@ const delightfulCardsData = [
 ];
 
 export default function PrinciplesPage() {
+  // Combine all cards into a single array
+  const allCards = [
+    ...cardsData,
+    ...preciseCardsData,
+    ...efficientCardsData,
+    ...durableCardsData,
+    ...delightfulCardsData,
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="mx-auto" style={{ width: "fit-content" }}>
+      <div className="max-w-full mx-auto px-4">
         <h1 className="text-4xl font-medium text-gray-900 mb-16 tracking-tight">
           Design Principles
         </h1>
 
-        {/* CLEAR Category Section */}
-        <section className="mb-16">
-          <h2
-            className="text-xl font-semibold"
-            style={{ color: "#F46036", marginBottom: "24px" }}
-          >
-            Clear
-          </h2>
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: "repeat(2, auto)",
-              gap: "16px",
-              marginTop: 0,
-            }}
-          >
-            {cardsData.map((card, index) => (
-              <PrincipleCard key={index} {...card} />
-            ))}
-          </div>
-        </section>
-
-        {/* PRECISE Category Section */}
-        <section className="mb-16">
-          <h2
-            className="text-xl font-semibold mt-12"
-            style={{ color: "#EBA810", marginBottom: "24px" }}
-          >
-            Precise
-          </h2>
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: "repeat(2, auto)",
-              gap: "16px",
-              marginTop: 0,
-            }}
-          >
-            {preciseCardsData.map((card, index) => (
-              <PrincipleCard key={`precise-${index}`} {...card} />
-            ))}
-          </div>
-        </section>
-
-        {/* EFFICIENT Category Section */}
-        <section className="mb-16">
-          <h2
-            className="text-xl font-semibold mt-12"
-            style={{ color: "#3BCEAC", marginBottom: "24px" }}
-          >
-            Efficient
-          </h2>
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: "repeat(2, auto)",
-              gap: "16px",
-              marginTop: 0,
-            }}
-          >
-            {efficientCardsData.map((card, index) => (
-              <PrincipleCard key={`efficient-${index}`} {...card} />
-            ))}
-          </div>
-        </section>
-
-        {/* DURABLE Category Section */}
-        <section className="mb-16">
-          <h2
-            className="text-xl font-semibold mt-12"
-            style={{ color: "#368DD9", marginBottom: "24px" }}
-          >
-            Durable
-          </h2>
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: "repeat(2, auto)",
-              gap: "16px",
-              marginTop: 0,
-            }}
-          >
-            {durableCardsData.map((card, index) => (
-              <PrincipleCard key={`durable-${index}`} {...card} />
-            ))}
-          </div>
-        </section>
-
-        {/* DELIGHTFUL Category Section */}
-        <section>
-          <h2
-            className="text-xl font-semibold mt-12"
-            style={{ color: "#391DC9", marginBottom: "24px" }}
-          >
-            Delightful
-          </h2>
-          <div
-            className="grid"
-            style={{
-              gridTemplateColumns: "repeat(2, auto)",
-              gap: "16px",
-              marginTop: 0,
-            }}
-          >
-            {delightfulCardsData.map((card, index) => (
-              <PrincipleCard key={`delightful-${index}`} {...card} />
-            ))}
-          </div>
-        </section>
+        <div className="principles-grid">
+          {allCards.map((card, index) => (
+            <PrincipleCard key={index} {...card} />
+          ))}
+        </div>
       </div>
     </div>
   );

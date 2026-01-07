@@ -61,7 +61,8 @@ export default function PrincipleCard({
         backgroundPosition: "center 0",
         backgroundColor: "#ffffff",
         minHeight: "641px",
-        maxWidth: "528px",
+        width: "100%",
+        minWidth: 0,
       }}
     >
       {/* Top Header Section with Dotted Pattern */}

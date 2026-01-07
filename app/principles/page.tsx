@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import PrincipleCard from "./PrincipleCard";
 
 // Card data array - can be expanded to 30+ cards
@@ -551,29 +552,36 @@ const delightfulCardsData = [
 ];
 
 export default function PrinciplesPage() {
-  const [view, setView] = useState<"grid" | "line">("grid");
-  const [targetView, setTargetView] = useState<"grid" | "line">("grid");
+  const [view, setView] = useState<"grid" | "line">("line");
+  const [targetView, setTargetView] = useState<"grid" | "line">("line");
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
     null
   );
+  const [pressedButton, setPressedButton] = useState<
+    "left" | "right" | "random" | null
+  >(null);
+  const [pressedTab, setPressedTab] = useState<"grid" | "explore" | null>(null);
   const activeCardIndexRef = useRef(0);
   const lineContainerRef = useRef<HTMLDivElement>(null);
   const cardsWrapperRef = useRef<HTMLDivElement>(null);
 
-  const handleViewChange = (newView: "grid" | "line") => {
-    if (newView === view) return;
+  const handleViewChange = useCallback(
+    (newView: "grid" | "line") => {
+      if (newView === view) return;
 
-    setTargetView(newView);
-    if (newView === "line") {
-      activeCardIndexRef.current = 0;
-      setActiveCardIndex(0);
-    }
-    // Start animation immediately
-    setTimeout(() => {
-      setView(newView);
-    }, 125); // Match animation duration
-  };
+      setTargetView(newView);
+      if (newView === "line") {
+        activeCardIndexRef.current = 0;
+        setActiveCardIndex(0);
+      }
+      // Start animation immediately
+      setTimeout(() => {
+        setView(newView);
+      }, 300); // Match animation duration
+    },
+    [view]
+  );
 
   // Combine all cards into a single array
   const allCards = [
@@ -584,32 +592,69 @@ export default function PrinciplesPage() {
     ...delightfulCardsData,
   ];
 
-  // No need to scroll - cards are centered with flexbox
-
-  // Keyboard navigation and vertical-to-horizontal scroll for line view
+  // Keyboard navigation for view switching and line view
   useEffect(() => {
-    if (view !== "line") return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!lineContainerRef.current) return;
+      // View switching shortcuts (work in both views)
+      if (e.key === "a" || e.key === "A") {
+        e.preventDefault();
+        if (view !== "grid") {
+          setPressedTab("grid");
+          handleViewChange("grid");
+          setTimeout(() => setPressedTab(null), 150);
+        }
+        return;
+      } else if (e.key === "e" || e.key === "E") {
+        e.preventDefault();
+        if (view !== "line") {
+          setPressedTab("explore");
+          handleViewChange("line");
+          setTimeout(() => setPressedTab(null), 150);
+        }
+        return;
+      }
+
+      // Line view navigation shortcuts
+      if (view !== "line" || !lineContainerRef.current) return;
 
       const currentIndex = activeCardIndexRef.current;
       if (e.key === "ArrowLeft") {
         e.preventDefault();
+        setPressedButton("left");
         const newIndex =
           currentIndex === 0 ? allCards.length - 1 : currentIndex - 1;
         setSlideDirection("right"); // Cards slide right when going to previous
         activeCardIndexRef.current = newIndex;
         setActiveCardIndex(newIndex);
-        setTimeout(() => setSlideDirection(null), 300); // Reset after animation
+        setTimeout(() => {
+          setSlideDirection(null);
+          setPressedButton(null);
+        }, 150); // Reset after animation
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
+        setPressedButton("right");
         const newIndex =
           currentIndex === allCards.length - 1 ? 0 : currentIndex + 1;
         setSlideDirection("left"); // Cards slide left when going to next
         activeCardIndexRef.current = newIndex;
         setActiveCardIndex(newIndex);
-        setTimeout(() => setSlideDirection(null), 300); // Reset after animation
+        setTimeout(() => {
+          setSlideDirection(null);
+          setPressedButton(null);
+        }, 150); // Reset after animation
+      } else if (e.key === "r" || e.key === "R") {
+        e.preventDefault();
+        setPressedButton("random");
+        const randomIndex = Math.floor(Math.random() * allCards.length);
+        // Determine slide direction based on whether random is before or after current
+        const direction = randomIndex > currentIndex ? "left" : "right";
+        setSlideDirection(direction);
+        activeCardIndexRef.current = randomIndex;
+        setActiveCardIndex(randomIndex);
+        setTimeout(() => {
+          setSlideDirection(null);
+          setPressedButton(null);
+        }, 150);
       }
     };
 
@@ -618,7 +663,7 @@ export default function PrinciplesPage() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [view, allCards.length]);
+  }, [view, allCards.length, handleViewChange]);
 
   // Drag interaction removed - using flexbox positioning instead
 
@@ -644,11 +689,11 @@ export default function PrinciplesPage() {
     <div
       className="min-h-screen"
       style={{
-        backgroundColor: "#E7E5E3",
+        backgroundColor: "#DDDBD9",
         padding: "24px",
         backgroundImage: `
-          linear-gradient(to right, rgba(0, 0, 0, 0.12) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 1px, transparent 1px)
+          linear-gradient(to right, rgba(0, 0, 0, 0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.08) 1px, transparent 1px)
         `,
         backgroundSize: "8px 8px",
       }}
@@ -659,10 +704,11 @@ export default function PrinciplesPage() {
         }`}
         style={{
           position: "relative",
-          overflow: "visible",
+          overflow: "hidden",
           zIndex: 20,
           backgroundColor: "#E7E5E3",
-          border: "1px solid rgba(0, 0, 0, 0.12)",
+          borderRadius: "8px",
+          boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.12)",
           minHeight:
             view === "line" || targetView === "line" ? "100vh" : "auto",
         }}
@@ -694,31 +740,87 @@ export default function PrinciplesPage() {
 
           {/* Tabs */}
           <div
-            className="flex p-1 rounded-lg"
+            className="flex p-1 rounded-lg relative"
             style={{
               backgroundColor: "rgba(0, 0, 0, 0.04)",
               border: "1px solid rgba(0, 0, 0, 0.08)",
             }}
           >
-            <button
-              onClick={() => handleViewChange("grid")}
-              className={`px-3 py-1 rounded text-xs font-medium transition-all duration-200 ease-in-out ${
-                view === "grid"
-                  ? "bg-white text-black/45"
-                  : "bg-transparent text-black/45"
-              }`}
-            >
-              Grid
-            </button>
+            {/* Sliding indicator */}
+            <div
+              style={{
+                position: "absolute",
+                top: "4px",
+                bottom: "4px",
+                left: view === "line" ? "4px" : "50%",
+                right: view === "line" ? "50%" : "4px",
+                backgroundColor: "white",
+                borderRadius: "4px",
+                transition:
+                  "left 0.15s cubic-bezier(0.34, 1.25, 0.64, 1), right 0.15s cubic-bezier(0.34, 1.25, 0.64, 1)",
+                zIndex: 0,
+              }}
+            />
             <button
               onClick={() => handleViewChange("line")}
-              className={`px-3 py-1 rounded text-xs font-medium transition-all duration-200 ease-in-out ${
-                view === "line"
-                  ? "bg-white text-black/45"
-                  : "bg-transparent text-black/45"
-              }`}
+              className="px-3 py-1 rounded text-xs font-medium text-black/45 relative z-10"
+              style={{
+                transform:
+                  pressedTab === "explore" ? "scale(0.95)" : "scale(1)",
+                transition: "transform 0.05s ease-out",
+              }}
             >
-              Line
+              Explore{" "}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "3px",
+                  backgroundColor: "rgba(0, 0, 0, 0.08)",
+                  border: "1px solid rgba(0, 0, 0, 0.12)",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  opacity: 0.5,
+                  marginLeft: "3px",
+                  marginTop: "-2px",
+                  verticalAlign: "middle",
+                }}
+              >
+                E
+              </span>
+            </button>
+            <button
+              onClick={() => handleViewChange("grid")}
+              className="px-3 py-1 rounded text-xs font-medium text-black/45 relative z-10"
+              style={{
+                transform: pressedTab === "grid" ? "scale(0.95)" : "scale(1)",
+                transition: "transform 0.05s ease-out",
+              }}
+            >
+              View All{" "}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "3px",
+                  backgroundColor: "rgba(0, 0, 0, 0.08)",
+                  border: "1px solid rgba(0, 0, 0, 0.12)",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  opacity: 0.5,
+                  marginLeft: "3px",
+                  marginTop: "-2px",
+                  verticalAlign: "middle",
+                }}
+              >
+                A
+              </span>
             </button>
           </div>
         </div>
@@ -772,128 +874,214 @@ export default function PrinciplesPage() {
           </div>
         </div>
 
-        {/* Grid View */}
-        {(view === "grid" || targetView === "grid") && (
-          <div
-            className="principles-grid"
-            style={{
-              opacity:
-                targetView === "line" ||
-                (view === "line" && targetView === "grid")
-                  ? 0
-                  : 1,
-              transition: "opacity 125ms ease-out",
-            }}
-          >
-            {allCards.map((card, index) => (
-              <PrincipleCard key={index} {...card} />
-            ))}
-          </div>
-        )}
-
-        {/* Line View */}
-        {(view === "line" || targetView === "line") && (
-          <div
+        {/* Unified Cards Container - Seamless transitions */}
+        <div style={{ position: "relative", width: "100%" }}>
+          <motion.div
             ref={lineContainerRef}
-            className="principles-line"
             style={{
-              width: "calc(100% + 96px)",
-              marginLeft: "-48px",
-              marginRight: "-48px",
-              paddingLeft: "32px",
-              paddingRight: "32px",
-              paddingBottom: "1rem",
+              width: targetView === "line" ? "calc(100% + 48px)" : "100%",
+              marginLeft: targetView === "line" ? "-24px" : "0",
+              marginRight: targetView === "line" ? "-24px" : "0",
+              paddingLeft: "0",
+              paddingRight: "0",
+              paddingBottom: "0",
               backgroundColor: "transparent",
-              display: "flex",
-              alignItems: "center",
-              paddingTop: "32px",
-              overflowX: "hidden",
+              display: targetView === "line" ? "flex" : "grid",
+              gridTemplateColumns:
+                targetView === "grid"
+                  ? "repeat(auto-fit, minmax(460px, auto))"
+                  : "none",
+              gap: "16px",
+              alignItems: targetView === "line" ? "center" : "start",
+              justifyContent: targetView === "grid" ? "start" : "flex-start",
+              paddingTop: "0",
+              overflowX: targetView === "line" ? "hidden" : "visible",
               overflowY: "hidden",
-              opacity: view === "line" && targetView === "line" ? 1 : 0,
-              transition: "opacity 125ms ease-out",
-              minHeight: "calc(100vh - 300px)",
+              position: "relative",
+              minHeight: targetView === "line" ? "calc(100vh - 500px)" : "auto",
+              opacity: 1,
+              transform:
+                view === "line" && targetView === "line"
+                  ? "translateX(0)"
+                  : targetView === "line" && view === "grid"
+                  ? "translateX(-48px)"
+                  : view === "line" && targetView === "grid"
+                  ? "translateX(-48px)"
+                  : targetView === "line"
+                  ? "translateX(48px)"
+                  : view === "line" && targetView === "grid"
+                  ? "translateX(48px)"
+                  : "translateX(0)",
+              transition:
+                "opacity 0.3s cubic-bezier(0.34, 1.25, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.25, 0.64, 1)",
               pointerEvents:
-                view === "line" && targetView === "line" ? "auto" : "none",
+                view === "line" && targetView === "line"
+                  ? "auto"
+                  : view === "grid" && targetView === "grid"
+                  ? "auto"
+                  : "none",
             }}
           >
-            {/* Cards wrapper that slides - render all cards */}
-            <div
-              ref={cardsWrapperRef}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "16px",
-                transform: `translateX(calc(50vw - ${
-                  activeCardIndex * 544 + 264
-                }px))`,
-                transition: "transform 0.3s ease-out",
-              }}
-            >
-              {allCards.map((card, index) => {
-                const isActive = activeCardIndex === index;
-                const isPrev =
-                  activeCardIndex === 0
-                    ? index === allCards.length - 1
-                    : index === activeCardIndex - 1;
-                const isNext =
-                  activeCardIndex === allCards.length - 1
-                    ? index === 0
-                    : index === activeCardIndex + 1;
-                const opacity = isActive ? 1 : isPrev || isNext ? 0.5 : 0.25;
-                const scale = isActive ? 1 : 0.95;
+            {/* Fade masks for line view */}
+            {targetView === "line" && (
+              <>
+                <div
+                  style={{
+                    position: "absolute",
+                    left: "-24px",
+                    top: 0,
+                    bottom: 0,
+                    width: "120px",
+                    background:
+                      "linear-gradient(to right, #E7E5E3 0%, #E7E5E3 40%, transparent 100%)",
+                    pointerEvents: "none",
+                    zIndex: 10,
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    right: "-24px",
+                    top: 0,
+                    bottom: 0,
+                    width: "120px",
+                    background:
+                      "linear-gradient(to left, #E7E5E3 0%, #E7E5E3 40%, transparent 100%)",
+                    pointerEvents: "none",
+                    zIndex: 10,
+                  }}
+                />
+              </>
+            )}
 
-                return (
-                  <div
-                    key={index}
-                    data-card
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (!lineContainerRef.current) return;
-                      const direction =
-                        index > activeCardIndex
-                          ? "left"
-                          : index < activeCardIndex
-                          ? "right"
-                          : null;
-                      if (direction) {
-                        setSlideDirection(direction);
-                      }
-                      activeCardIndexRef.current = index;
-                      setActiveCardIndex(index);
-                      setTimeout(() => setSlideDirection(null), 300);
-                    }}
-                    style={{
-                      flexShrink: 0,
-                      width: "528px",
-                      opacity,
-                      transform: `scale(${scale})`,
-                      transition:
-                        "opacity 0.3s ease-out, transform 0.3s ease-out",
-                      cursor: "pointer",
-                      marginLeft: index === 0 ? "-264px" : "0px",
-                      marginRight:
-                        index === allCards.length - 1 ? "-264px" : "0px",
-                    }}
-                  >
-                    <PrincipleCard {...card} />
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
+            {/* Cards wrapper for line view positioning */}
+            {targetView === "line" ? (
+              <motion.div
+                ref={cardsWrapperRef}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "16px",
+                  transform: `translateX(calc(50vw - ${
+                    activeCardIndex * 544 + 264
+                  }px))`,
+                  transition: "transform 0.3s ease-out",
+                }}
+                layout={false}
+              >
+                {allCards.map((card, index) => {
+                  const isActive = activeCardIndex === index;
+                  const isPrev =
+                    activeCardIndex === 0
+                      ? index === allCards.length - 1
+                      : index === activeCardIndex - 1;
+                  const isNext =
+                    activeCardIndex === allCards.length - 1
+                      ? index === 0
+                      : index === activeCardIndex + 1;
+                  const opacity = isActive ? 1 : isPrev || isNext ? 0.5 : 0.25;
+                  const scale = isActive ? 1.05 : 1;
+
+                  return (
+                    <motion.div
+                      key={index}
+                      data-card
+                      animate={{
+                        opacity,
+                        scale,
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!lineContainerRef.current) return;
+                        const direction =
+                          index > activeCardIndex
+                            ? "left"
+                            : index < activeCardIndex
+                            ? "right"
+                            : null;
+                        if (direction) {
+                          setSlideDirection(direction);
+                        }
+                        activeCardIndexRef.current = index;
+                        setActiveCardIndex(index);
+                        setTimeout(() => setSlideDirection(null), 300);
+                      }}
+                      style={{
+                        flexShrink: 0,
+                        width: "528px",
+                        maxWidth: "528px",
+                        cursor: "pointer",
+                        marginLeft:
+                          index === 0 ? "-264px" : isActive ? "13px" : "0px",
+                        marginRight:
+                          index === allCards.length - 1
+                            ? "-264px"
+                            : isActive
+                            ? "13px"
+                            : "0px",
+                        marginTop: 0,
+                        marginBottom: 0,
+                        padding: 0,
+                        transformOrigin: "center center",
+                      }}
+                      transition={{
+                        opacity: { duration: 0.3, ease: "easeOut" },
+                        scale: { duration: 0.3, ease: "easeOut" },
+                        marginLeft: { duration: 0.3, ease: "easeOut" },
+                        marginRight: { duration: 0.3, ease: "easeOut" },
+                      }}
+                    >
+                      <PrincipleCard {...card} />
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            ) : (
+              // Grid view - direct rendering
+              allCards.map((card, index) => (
+                <motion.div
+                  key={index}
+                  style={{
+                    maxWidth: "528px",
+                    minWidth: 0,
+                  }}
+                >
+                  <PrincipleCard {...card} />
+                </motion.div>
+              ))
+            )}
+          </motion.div>
+        </div>
 
         {/* Navigation buttons - Fixed at bottom */}
-        {view === "line" && (
+        {(view === "line" || targetView === "line") && (
           <div
             style={{
               position: "fixed",
               bottom: "24px",
               left: "50%",
-              transform: "translateX(-50%)",
+              transform: `translateX(-50%) ${
+                targetView === "line" && view === "grid"
+                  ? "translateX(-48px)"
+                  : view === "line" && targetView === "grid"
+                  ? "translateX(-48px)"
+                  : "translateX(0)"
+              }`,
               display: "flex",
-              gap: "8px",
+              gap: "4px",
               zIndex: 50,
+              opacity:
+                targetView === "line" && view === "grid"
+                  ? 0
+                  : view === "line" && targetView === "line"
+                  ? 1
+                  : view === "line" && targetView === "grid"
+                  ? 1
+                  : 0,
+              transition:
+                "opacity 0.3s cubic-bezier(0.34, 1.25, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.25, 0.64, 1)",
+              pointerEvents:
+                view === "line" && targetView === "line" ? "auto" : "none",
             }}
           >
             <button
@@ -907,16 +1095,23 @@ export default function PrinciplesPage() {
                 setTimeout(() => setSlideDirection(null), 300);
               }}
               style={{
-                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                backgroundColor:
+                  pressedButton === "left"
+                    ? "rgba(0, 0, 0, 0.8)"
+                    : "rgba(0, 0, 0, 0.6)",
                 color: "white",
                 border: "none",
-                padding: "8px 16px",
-                borderRadius: "4px",
-                fontSize: "14px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "12px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transform:
+                  pressedButton === "left" ? "scale(0.95)" : "scale(1)",
+                transition:
+                  "background-color 0.05s ease-out, transform 0.05s ease-out",
               }}
             >
               ←
@@ -928,16 +1123,43 @@ export default function PrinciplesPage() {
                 setActiveCardIndex(randomIndex);
               }}
               style={{
-                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                backgroundColor:
+                  pressedButton === "random"
+                    ? "rgba(0, 0, 0, 0.8)"
+                    : "rgba(0, 0, 0, 0.6)",
                 color: "white",
                 border: "none",
-                padding: "8px 16px",
-                borderRadius: "4px",
-                fontSize: "14px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "12px",
                 cursor: "pointer",
+                transform:
+                  pressedButton === "random" ? "scale(0.95)" : "scale(1)",
+                transition:
+                  "background-color 0.05s ease-out, transform 0.05s ease-out",
               }}
             >
-              Random
+              Random{" "}
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "16px",
+                  height: "16px",
+                  borderRadius: "3px",
+                  backgroundColor: "rgba(255, 255, 255, 0.2)",
+                  border: "1px solid rgba(255, 255, 255, 0.3)",
+                  fontSize: "9px",
+                  fontWeight: 600,
+                  color: "rgba(255, 255, 255, 0.7)",
+                  marginLeft: "3px",
+                  marginTop: "-2px",
+                  verticalAlign: "middle",
+                }}
+              >
+                R
+              </span>
             </button>
             <button
               onClick={() => {
@@ -950,16 +1172,23 @@ export default function PrinciplesPage() {
                 setTimeout(() => setSlideDirection(null), 300);
               }}
               style={{
-                backgroundColor: "rgba(0, 0, 0, 0.6)",
+                backgroundColor:
+                  pressedButton === "right"
+                    ? "rgba(0, 0, 0, 0.8)"
+                    : "rgba(0, 0, 0, 0.6)",
                 color: "white",
                 border: "none",
-                padding: "8px 16px",
-                borderRadius: "4px",
-                fontSize: "14px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "12px",
                 cursor: "pointer",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                transform:
+                  pressedButton === "right" ? "scale(0.95)" : "scale(1)",
+                transition:
+                  "background-color 0.05s ease-out, transform 0.05s ease-out",
               }}
             >
               →

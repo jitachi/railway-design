@@ -562,6 +562,9 @@ export default function PrinciplesPage() {
     "left" | "right" | "random" | null
   >(null);
   const [pressedTab, setPressedTab] = useState<"grid" | "explore" | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStartX, setDragStartX] = useState(0);
+  const [dragOffset, setDragOffset] = useState(0);
   const activeCardIndexRef = useRef(0);
   const lineContainerRef = useRef<HTMLDivElement>(null);
   const cardsWrapperRef = useRef<HTMLDivElement>(null);
@@ -665,7 +668,107 @@ export default function PrinciplesPage() {
     };
   }, [view, allCards.length, handleViewChange]);
 
-  // Drag interaction removed - using flexbox positioning instead
+  // Drag handlers for card line
+  const dragStartXRef = useRef(0);
+  const isDraggingRef = useRef(false);
+  const hasDraggedRef = useRef(false);
+  const dragOffsetRef = useRef(0);
+  const startIndexRef = useRef(0);
+
+  useEffect(() => {
+    if (view !== "line" || !cardsWrapperRef.current) return;
+
+    const getClientX = (e: MouseEvent | TouchEvent): number => {
+      if ("touches" in e) {
+        return e.touches[0]?.clientX ?? 0;
+      }
+      return e.clientX;
+    };
+
+    const handleStart = (e: MouseEvent | TouchEvent) => {
+      e.preventDefault();
+      isDraggingRef.current = true;
+      hasDraggedRef.current = false;
+      dragStartXRef.current = getClientX(e);
+      startIndexRef.current = activeCardIndexRef.current;
+      dragOffsetRef.current = 0;
+      setIsDragging(true);
+      setDragOffset(0);
+    };
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      if (!isDraggingRef.current) return;
+      e.preventDefault();
+      const deltaX = getClientX(e) - dragStartXRef.current;
+      if (Math.abs(deltaX) > 2) {
+        hasDraggedRef.current = true;
+      }
+      dragOffsetRef.current = deltaX;
+      setDragOffset(deltaX);
+    };
+
+    const handleEnd = () => {
+      if (!isDraggingRef.current) return;
+      const wasDragging = hasDraggedRef.current;
+      isDraggingRef.current = false;
+      setIsDragging(false);
+
+      // Get current drag offset from ref (always fresh)
+      const totalDrag = dragOffsetRef.current;
+
+      // Only snap if it was actually a drag, not just a click
+      if (wasDragging) {
+        // Calculate how many cards to move based on total drag distance
+        const cardWidth = 544; // 528px card + 16px gap
+        const cardsMoved = Math.round(totalDrag / cardWidth);
+        const startIndex = startIndexRef.current;
+        const newIndex = Math.max(
+          0,
+          Math.min(allCards.length - 1, startIndex - cardsMoved)
+        );
+
+        if (newIndex !== startIndex) {
+          // Update index
+          activeCardIndexRef.current = newIndex;
+          setActiveCardIndex(newIndex);
+        }
+
+        // Always reset offset smoothly
+        dragOffsetRef.current = 0;
+        setDragOffset(0);
+      } else {
+        // No drag, reset offset immediately
+        dragOffsetRef.current = 0;
+        setDragOffset(0);
+      }
+
+      // Reset drag flag after a short delay to allow click handler to check it
+      setTimeout(() => {
+        hasDraggedRef.current = false;
+      }, 10);
+    };
+
+    const wrapper = cardsWrapperRef.current;
+
+    // Mouse events
+    wrapper.addEventListener("mousedown", handleStart);
+    document.addEventListener("mousemove", handleMove);
+    document.addEventListener("mouseup", handleEnd);
+
+    // Touch events for mobile
+    wrapper.addEventListener("touchstart", handleStart, { passive: false });
+    document.addEventListener("touchmove", handleMove, { passive: false });
+    document.addEventListener("touchend", handleEnd);
+
+    return () => {
+      wrapper.removeEventListener("mousedown", handleStart);
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("mouseup", handleEnd);
+      wrapper.removeEventListener("touchstart", handleStart);
+      document.removeEventListener("touchmove", handleMove);
+      document.removeEventListener("touchend", handleEnd);
+    };
+  }, [view, allCards.length]);
 
   // Prevent double scrollbars during transition
   useEffect(() => {
@@ -931,7 +1034,7 @@ export default function PrinciplesPage() {
                     left: "-24px",
                     top: 0,
                     bottom: 0,
-                    width: "120px",
+                    width: "60px",
                     background:
                       "linear-gradient(to right, #E7E5E3 0%, #E7E5E3 40%, transparent 100%)",
                     pointerEvents: "none",
@@ -944,7 +1047,7 @@ export default function PrinciplesPage() {
                     right: "-24px",
                     top: 0,
                     bottom: 0,
-                    width: "120px",
+                    width: "60px",
                     background:
                       "linear-gradient(to left, #E7E5E3 0%, #E7E5E3 40%, transparent 100%)",
                     pointerEvents: "none",
@@ -962,10 +1065,20 @@ export default function PrinciplesPage() {
                   display: "flex",
                   alignItems: "center",
                   gap: "16px",
-                  transform: `translateX(calc(50vw - ${
-                    activeCardIndex * 544 + 264
-                  }px))`,
-                  transition: "transform 0.3s ease-out",
+                  position: "relative",
+                  left: "calc(50vw - 264px)",
+                  transform: `translateX(calc(-${
+                    activeCardIndex * 544
+                  }px + ${dragOffset}px))`,
+                  transition: isDragging ? "none" : "transform 0.15s ease-out",
+                  cursor: isDragging ? "grabbing" : "grab",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                  touchAction: "pan-x",
+                  marginLeft: 0,
+                  marginRight: 0,
+                  paddingLeft: 0,
+                  paddingRight: 0,
                 }}
                 layout={false}
               >
@@ -980,7 +1093,7 @@ export default function PrinciplesPage() {
                       ? index === 0
                       : index === activeCardIndex + 1;
                   const opacity = isActive ? 1 : isPrev || isNext ? 0.5 : 0.25;
-                  const scale = isActive ? 1.05 : 1;
+                  const scale = isActive ? 1.08 : 1;
 
                   return (
                     <motion.div
@@ -992,6 +1105,8 @@ export default function PrinciplesPage() {
                       }}
                       onClick={(e) => {
                         e.stopPropagation();
+                        // Don't trigger card click if it was a drag
+                        if (hasDraggedRef.current) return;
                         if (!lineContainerRef.current) return;
                         const direction =
                           index > activeCardIndex
@@ -1010,14 +1125,14 @@ export default function PrinciplesPage() {
                         flexShrink: 0,
                         width: "528px",
                         maxWidth: "528px",
-                        cursor: "pointer",
+                        cursor: isDragging ? "grabbing" : "grab",
                         marginLeft:
-                          index === 0 ? "-264px" : isActive ? "13px" : "0px",
+                          index === 0 ? "-264px" : isActive ? "21px" : "0px",
                         marginRight:
                           index === allCards.length - 1
                             ? "-264px"
                             : isActive
-                            ? "13px"
+                            ? "21px"
                             : "0px",
                         marginTop: 0,
                         marginBottom: 0,

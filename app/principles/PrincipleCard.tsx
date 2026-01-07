@@ -135,8 +135,11 @@ export default function PrincipleCard({
                   {item.question}
                 </p>
                 <p
-                  className="text-base text-gray-400 leading-relaxed"
-                  style={{ letterSpacing: "-0.0125em" }}
+                  className="text-base leading-relaxed"
+                  style={{
+                    letterSpacing: "-0.0125em",
+                    color: "rgba(0, 0, 0, 0.45)",
+                  }}
                 >
                   {item.answer}
                 </p>
@@ -148,3 +151,4 @@ export default function PrincipleCard({
     </div>
   );
 }
+

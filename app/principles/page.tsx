@@ -565,6 +565,7 @@ export default function PrinciplesPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStartX, setDragStartX] = useState(0);
   const [dragOffset, setDragOffset] = useState(0);
+  const [isWrapping, setIsWrapping] = useState(false);
   const activeCardIndexRef = useRef(0);
   const lineContainerRef = useRef<HTMLDivElement>(null);
   const cardsWrapperRef = useRef<HTMLDivElement>(null);
@@ -624,27 +625,55 @@ export default function PrinciplesPage() {
       if (e.key === "ArrowLeft") {
         e.preventDefault();
         setPressedButton("left");
-        const newIndex =
-          currentIndex === 0 ? allCards.length - 1 : currentIndex - 1;
-        setSlideDirection("right"); // Cards slide right when going to previous
-        activeCardIndexRef.current = newIndex;
-        setActiveCardIndex(newIndex);
+        const isWrappingForward = currentIndex === 0;
+        const newIndex = isWrappingForward
+          ? allCards.length - 1
+          : currentIndex - 1;
+
+        if (isWrappingForward) {
+          // Instant wrap: going from first to last
+          setIsWrapping(true); // Disable transitions for instant swap
+          activeCardIndexRef.current = newIndex;
+          setActiveCardIndex(newIndex); // Instantly swap to last card
+          // Re-enable transitions after instant swap
+          requestAnimationFrame(() => {
+            setIsWrapping(false);
+          });
+        } else {
+          setSlideDirection("right");
+          activeCardIndexRef.current = newIndex;
+          setActiveCardIndex(newIndex);
+        }
+
         setTimeout(() => {
           setSlideDirection(null);
           setPressedButton(null);
-        }, 150); // Reset after animation
+        }, 150);
       } else if (e.key === "ArrowRight") {
         e.preventDefault();
         setPressedButton("right");
-        const newIndex =
-          currentIndex === allCards.length - 1 ? 0 : currentIndex + 1;
-        setSlideDirection("left"); // Cards slide left when going to next
-        activeCardIndexRef.current = newIndex;
-        setActiveCardIndex(newIndex);
+        const isWrappingBackward = currentIndex === allCards.length - 1;
+        const newIndex = isWrappingBackward ? 0 : currentIndex + 1;
+
+        if (isWrappingBackward) {
+          // Instant wrap: going from last to first
+          setIsWrapping(true); // Disable transitions for instant swap
+          activeCardIndexRef.current = newIndex;
+          setActiveCardIndex(newIndex); // Instantly swap to first card
+          // Re-enable transitions after instant swap
+          requestAnimationFrame(() => {
+            setIsWrapping(false);
+          });
+        } else {
+          setSlideDirection("left");
+          activeCardIndexRef.current = newIndex;
+          setActiveCardIndex(newIndex);
+        }
+
         setTimeout(() => {
           setSlideDirection(null);
           setPressedButton(null);
-        }, 150); // Reset after animation
+        }, 150);
       } else if (e.key === "r" || e.key === "R") {
         e.preventDefault();
         setPressedButton("random");
@@ -722,10 +751,15 @@ export default function PrinciplesPage() {
         const cardWidth = 544; // 528px card + 16px gap
         const cardsMoved = Math.round(totalDrag / cardWidth);
         const startIndex = startIndexRef.current;
-        const newIndex = Math.max(
-          0,
-          Math.min(allCards.length - 1, startIndex - cardsMoved)
-        );
+        let newIndex = startIndex - cardsMoved;
+
+        // Wrap around
+        while (newIndex < 0) {
+          newIndex += allCards.length;
+        }
+        while (newIndex >= allCards.length) {
+          newIndex -= allCards.length;
+        }
 
         if (newIndex !== startIndex) {
           // Update index
@@ -1068,7 +1102,8 @@ export default function PrinciplesPage() {
                   position: "relative",
                   left: "calc(50vw - 264px)",
                   transform: `translateX(calc(-${
-                    activeCardIndex * 544
+                    // Calculate transform position accounting for duplicates at start (+3 offset)
+                    (activeCardIndex + 3) * 544
                   }px + ${dragOffset}px))`,
                   transition: isDragging ? "none" : "transform 0.15s ease-out",
                   cursor: isDragging ? "grabbing" : "grab",
@@ -1082,16 +1117,73 @@ export default function PrinciplesPage() {
                 }}
                 layout={false}
               >
+                {/* Duplicate last 3 cards at start for seamless looping */}
+                {allCards.length > 0 &&
+                  [2, 1, 0].map((offset) => {
+                    const cardIndex =
+                      (allCards.length - 1 - offset + allCards.length) %
+                      allCards.length;
+                    const virtualIndex = -1 - offset; // -3, -2, -1
+                    const isActive = activeCardIndex === virtualIndex;
+                    const isPrev = activeCardIndex === virtualIndex + 1;
+                    const isNext = activeCardIndex === virtualIndex - 1;
+                    const opacity = isActive
+                      ? 1
+                      : isPrev || isNext
+                      ? 0.5
+                      : 0.25;
+                    const scale = isActive ? 1.08 : 1;
+                    const marginLeft = isActive ? "21px" : "0px";
+                    const marginRight = isActive ? "21px" : "0px";
+
+                    return (
+                      <motion.div
+                        key={`duplicate-start-${offset}`}
+                        style={{
+                          flexShrink: 0,
+                          width: "528px",
+                          maxWidth: "528px",
+                          marginLeft,
+                          marginRight,
+                        }}
+                        animate={{
+                          opacity,
+                          scale,
+                        }}
+                        transition={
+                          isWrapping
+                            ? { duration: 0 }
+                            : {
+                                opacity: { duration: 0.3, ease: "easeOut" },
+                                scale: { duration: 0.3, ease: "easeOut" },
+                                marginLeft: { duration: 0.3, ease: "easeOut" },
+                                marginRight: { duration: 0.3, ease: "easeOut" },
+                              }
+                        }
+                      >
+                        <PrincipleCard {...allCards[cardIndex]} />
+                      </motion.div>
+                    );
+                  })}
+
                 {allCards.map((card, index) => {
-                  const isActive = activeCardIndex === index;
+                  // Map virtual indices to real indices for opacity/scale
+                  const realActiveIndex =
+                    activeCardIndex < 0
+                      ? allCards.length - 1 // Virtual -1 maps to last card
+                      : activeCardIndex >= allCards.length
+                      ? 0 // Virtual allCards.length maps to first card
+                      : activeCardIndex;
+
+                  const isActive = realActiveIndex === index;
                   const isPrev =
-                    activeCardIndex === 0
+                    realActiveIndex === 0
                       ? index === allCards.length - 1
-                      : index === activeCardIndex - 1;
+                      : index === realActiveIndex - 1;
                   const isNext =
-                    activeCardIndex === allCards.length - 1
+                    realActiveIndex === allCards.length - 1
                       ? index === 0
-                      : index === activeCardIndex + 1;
+                      : index === realActiveIndex + 1;
                   const opacity = isActive ? 1 : isPrev || isNext ? 0.5 : 0.25;
                   const scale = isActive ? 1.08 : 1;
 
@@ -1126,30 +1218,75 @@ export default function PrinciplesPage() {
                         width: "528px",
                         maxWidth: "528px",
                         cursor: isDragging ? "grabbing" : "grab",
-                        marginLeft:
-                          index === 0 ? "-264px" : isActive ? "21px" : "0px",
-                        marginRight:
-                          index === allCards.length - 1
-                            ? "-264px"
-                            : isActive
-                            ? "21px"
-                            : "0px",
+                        marginLeft: isActive ? "21px" : "0px",
+                        marginRight: isActive ? "21px" : "0px",
                         marginTop: 0,
                         marginBottom: 0,
                         padding: 0,
                         transformOrigin: "center center",
                       }}
-                      transition={{
-                        opacity: { duration: 0.3, ease: "easeOut" },
-                        scale: { duration: 0.3, ease: "easeOut" },
-                        marginLeft: { duration: 0.3, ease: "easeOut" },
-                        marginRight: { duration: 0.3, ease: "easeOut" },
-                      }}
+                      transition={
+                        isWrapping
+                          ? { duration: 0 }
+                          : {
+                              opacity: { duration: 0.3, ease: "easeOut" },
+                              scale: { duration: 0.3, ease: "easeOut" },
+                              marginLeft: { duration: 0.3, ease: "easeOut" },
+                              marginRight: { duration: 0.3, ease: "easeOut" },
+                            }
+                      }
                     >
                       <PrincipleCard {...card} />
                     </motion.div>
                   );
                 })}
+
+                {/* Duplicate first 3 cards at end for seamless looping */}
+                {allCards.length > 0 &&
+                  [0, 1, 2].map((offset) => {
+                    const cardIndex = offset % allCards.length;
+                    const virtualIndex = allCards.length + offset; // allCards.length, allCards.length + 1, allCards.length + 2
+                    const isActive = activeCardIndex === virtualIndex;
+                    const isPrev = activeCardIndex === virtualIndex - 1;
+                    const isNext = activeCardIndex === virtualIndex + 1;
+                    const opacity = isActive
+                      ? 1
+                      : isPrev || isNext
+                      ? 0.5
+                      : 0.25;
+                    const scale = isActive ? 1.08 : 1;
+                    const marginLeft = isActive ? "21px" : "0px";
+                    const marginRight = isActive ? "21px" : "0px";
+
+                    return (
+                      <motion.div
+                        key={`duplicate-end-${offset}`}
+                        style={{
+                          flexShrink: 0,
+                          width: "528px",
+                          maxWidth: "528px",
+                          marginLeft,
+                          marginRight,
+                        }}
+                        animate={{
+                          opacity,
+                          scale,
+                        }}
+                        transition={
+                          isWrapping
+                            ? { duration: 0 }
+                            : {
+                                opacity: { duration: 0.3, ease: "easeOut" },
+                                scale: { duration: 0.3, ease: "easeOut" },
+                                marginLeft: { duration: 0.3, ease: "easeOut" },
+                                marginRight: { duration: 0.3, ease: "easeOut" },
+                              }
+                        }
+                      >
+                        <PrincipleCard {...allCards[cardIndex]} />
+                      </motion.div>
+                    );
+                  })}
               </motion.div>
             ) : (
               // Grid view - direct rendering

@@ -780,7 +780,7 @@ export default function PrinciplesPage() {
         >
           <div style={{ maxWidth: "528px" }}>
             <h2 className="font-semibold mb-1 text-sm text-gray-900">
-              What's this?
+              What&apos;s this?
             </h2>
             <p className="text-sm text-gray-900 leading-normal">
               This is a compilation of the aspects we evaluate when shipping a

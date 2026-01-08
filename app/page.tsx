@@ -16,7 +16,7 @@ const projects = [
     disabled: false,
   },
   {
-    title: "How to build a page",
+    title: "Website Guidelines",
     description: "Something something about our principles",
     href: "/how-to-build-a-page",
     image: <HowToBuildAPage />,

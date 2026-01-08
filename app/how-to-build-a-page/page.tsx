@@ -46,7 +46,7 @@ export default function HowToBuildAPage() {
             </Link>
             <span className="text-gray-400">/</span>
             <h1 className="text-xl font-semibold text-gray-900 tracking-tight">
-              How to build a page
+              Website Guidelines
             </h1>
           </div>
 

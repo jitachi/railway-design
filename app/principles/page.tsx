@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  useState,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback,
+} from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import PrincipleCard from "./PrincipleCard";
@@ -558,6 +564,8 @@ export default function PrinciplesPage() {
   const [isMobile, setIsMobile] = useState(false); // For hiding keystrokes (< 480px)
   const [isStacked, setIsStacked] = useState(false); // For stacking layout (< 640px)
   const [mobileScale, setMobileScale] = useState(1); // Proportional scale for mobile cards
+  const [gridScale, setGridScale] = useState(1); // Proportional scale for grid cards
+  const [gridColumns, setGridColumns] = useState(2); // Number of columns in grid
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
     null
   );
@@ -816,13 +824,14 @@ export default function PrinciplesPage() {
   }, [view, allCards.length]);
 
   // Detect mobile (< 480px for keystrokes) and stacked layout (< 640px)
-  useEffect(() => {
+  // Use useLayoutEffect to calculate before paint to avoid flash
+  useLayoutEffect(() => {
     const checkBreakpoints = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
       setIsMobile(width < 480);
       setIsStacked(width < 640);
-      // Calculate proportional scale for mobile: based on width only
+      // Calculate proportional scale for mobile line view: based on width only
       if (width < 640) {
         const availableWidth = width - 48; // Account for outer container padding
         const targetCardWidth = availableWidth * 0.85; // Leave room for adjacent cards peek
@@ -830,6 +839,34 @@ export default function PrinciplesPage() {
       } else {
         setMobileScale(1);
       }
+
+      // Calculate grid scale: always try to show one more column than fits at 100%
+      // Available width = viewport - outer padding (24*2) - inner padding (48*2)
+      const containerWidth = width - 48 - 96; // viewport - outer padding - inner padding
+      const gap = 16;
+      const baseCardWidth = 528;
+
+      // How many columns fit at 100%?
+      const columnsAtFullSize = Math.floor(
+        (containerWidth + gap) / (baseCardWidth + gap)
+      );
+
+      // Try to show one more column, scaled down
+      const targetColumns = Math.max(2, columnsAtFullSize + 1);
+
+      // Calculate scale needed for targetColumns
+      // totalWidth = targetColumns * cardWidth * scale + (targetColumns - 1) * gap = containerWidth
+      const scaleNeeded =
+        (containerWidth - (targetColumns - 1) * gap) /
+        (targetColumns * baseCardWidth);
+
+      // If scale would be >= 1, just use the columnsAtFullSize at 100%
+      const newGridScale = Math.min(1, scaleNeeded);
+      const newGridColumns =
+        scaleNeeded >= 1 ? columnsAtFullSize : targetColumns;
+
+      setGridScale(newGridScale);
+      setGridColumns(newGridColumns);
     };
     checkBreakpoints();
     window.addEventListener("resize", checkBreakpoints);
@@ -1098,11 +1135,11 @@ export default function PrinciplesPage() {
               display: targetView === "line" ? "flex" : "grid",
               gridTemplateColumns:
                 targetView === "grid"
-                  ? "repeat(auto-fit, minmax(460px, auto))"
+                  ? `repeat(${gridColumns}, ${Math.round(528 * gridScale)}px)`
                   : "none",
               gap: "16px",
               alignItems: targetView === "line" ? "center" : "start",
-              justifyContent: targetView === "grid" ? "start" : "flex-start",
+              justifyContent: "center",
               paddingTop: "0",
               overflowX: targetView === "line" ? "hidden" : "visible",
               overflowY: "visible",
@@ -1379,17 +1416,24 @@ export default function PrinciplesPage() {
                   })}
               </motion.div>
             ) : (
-              // Grid view - direct rendering
+              // Grid view - cards fill column width and scale proportionally
               allCards.map((card, index) => (
-                <motion.div
+                <div
                   key={index}
                   style={{
+                    width: "100%",
                     maxWidth: "528px",
-                    minWidth: 0,
                   }}
                 >
-                  <PrincipleCard {...card} />
-                </motion.div>
+                  <div
+                    style={{
+                      width: "528px",
+                      zoom: gridScale < 1 ? gridScale : 1,
+                    }}
+                  >
+                    <PrincipleCard {...card} />
+                  </div>
+                </div>
               ))
             )}
           </motion.div>

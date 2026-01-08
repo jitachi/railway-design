@@ -78,14 +78,6 @@ a {
   margin-bottom: 2rem;
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
-  margin-top: 4rem;
-  width: 100%;
-}
-
 .card {
   background: #1a1a1a;
   border: 1px solid #2a2a2a;
@@ -215,10 +207,6 @@ a {
 
   .hero p {
     font-size: 1rem;
-  }
-
-  .grid {
-    grid-template-columns: 1fr;
   }
 
   .principles-grid {

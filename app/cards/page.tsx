@@ -560,6 +560,7 @@ const delightfulCardsData = [
 export default function PrinciplesPage() {
   const [view, setView] = useState<"grid" | "line">("line");
   const [targetView, setTargetView] = useState<"grid" | "line">("line");
+  const [isViewAnimating, setIsViewAnimating] = useState(false);
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false); // For hiding keystrokes (< 480px)
   const [isStacked, setIsStacked] = useState(false); // For stacking layout (< 640px)
@@ -585,15 +586,22 @@ export default function PrinciplesPage() {
     (newView: "grid" | "line") => {
       if (newView === view) return;
 
-      setTargetView(newView);
-      if (newView === "line") {
-        activeCardIndexRef.current = 0;
-        setActiveCardIndex(0);
-      }
-      // Start animation immediately
+      // Start exit animation
+      setIsViewAnimating(true);
+
+      // After exit animation, switch view and start enter animation
       setTimeout(() => {
         setView(newView);
-      }, 300); // Match animation duration
+        setTargetView(newView);
+        if (newView === "line") {
+          activeCardIndexRef.current = 0;
+          setActiveCardIndex(0);
+        }
+        // Small delay then remove animating state for enter animation
+        requestAnimationFrame(() => {
+          setIsViewAnimating(false);
+        });
+      }, 150);
     },
     [view]
   );
@@ -978,8 +986,7 @@ export default function PrinciplesPage() {
                   right: view === "line" ? "50%" : "4px",
                   backgroundColor: "white",
                   borderRadius: "4px",
-                  transition:
-                    "left 0.15s cubic-bezier(0.34, 1.25, 0.64, 1), right 0.15s cubic-bezier(0.34, 1.25, 0.64, 1)",
+                  transition: "left 0.15s ease-out, right 0.15s ease-out",
                   zIndex: 0,
                 }}
               />
@@ -1153,7 +1160,7 @@ export default function PrinciplesPage() {
               gap: "16px",
               alignItems: "flex-start",
               justifyContent: "center",
-              paddingTop: "0",
+              paddingTop: targetView === "grid" ? "32px" : "0",
               overflowX: targetView === "line" ? "hidden" : "visible",
               overflowY: "visible",
               position: "relative",
@@ -1164,21 +1171,9 @@ export default function PrinciplesPage() {
                     : "700px"
                   : "auto",
               minHeight: "auto",
-              opacity: 1,
-              transform:
-                view === "line" && targetView === "line"
-                  ? "translateX(0)"
-                  : targetView === "line" && view === "grid"
-                  ? "translateX(-48px)"
-                  : view === "line" && targetView === "grid"
-                  ? "translateX(-48px)"
-                  : targetView === "line"
-                  ? "translateX(48px)"
-                  : view === "line" && targetView === "grid"
-                  ? "translateX(48px)"
-                  : "translateX(0)",
-              transition:
-                "opacity 0.3s cubic-bezier(0.34, 1.25, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.25, 0.64, 1)",
+              opacity: isViewAnimating ? 0 : 1,
+              transform: isViewAnimating ? "translateY(24px)" : "translateY(0)",
+              transition: "opacity 0.15s ease-out, transform 0.15s ease-out",
               pointerEvents:
                 view === "line" && targetView === "line"
                   ? "auto"
@@ -1459,11 +1454,9 @@ export default function PrinciplesPage() {
               bottom: "24px",
               left: "50%",
               transform: `translateX(-50%) ${
-                targetView === "line" && view === "grid"
-                  ? "translateX(-48px)"
-                  : view === "line" && targetView === "grid"
-                  ? "translateX(-48px)"
-                  : "translateX(0)"
+                view === "line" && targetView === "grid"
+                  ? "translateY(32px)"
+                  : "translateY(0)"
               }`,
               display: "flex",
               gap: "4px",
@@ -1476,8 +1469,7 @@ export default function PrinciplesPage() {
                   : view === "line" && targetView === "grid"
                   ? 1
                   : 0,
-              transition:
-                "opacity 0.3s cubic-bezier(0.34, 1.25, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.25, 0.64, 1)",
+              transition: "opacity 0.3s ease-out, transform 0.3s ease-out",
               pointerEvents:
                 view === "line" && targetView === "line" ? "auto" : "none",
             }}

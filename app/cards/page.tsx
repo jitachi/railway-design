@@ -1363,10 +1363,20 @@ export default function PrinciplesPage() {
                           marginLeft: margin,
                           marginRight: margin,
                           transformOrigin: "center center",
+                          cursor: isDragging ? "grabbing" : "grab",
                         }}
                         animate={{
                           opacity,
                           scale,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (hasDraggedRef.current) return;
+                          // Navigate to the actual card index
+                          setSlideDirection("right");
+                          activeCardIndexRef.current = cardIndex;
+                          setActiveCardIndex(cardIndex);
+                          setTimeout(() => setSlideDirection(null), 300);
                         }}
                         transition={
                           isWrapping
@@ -1426,14 +1436,42 @@ export default function PrinciplesPage() {
                         if (hasDraggedRef.current) return;
                         if (!lineContainerRef.current) return;
 
-                        // Get click position relative to card
+                        let newIndex = index;
+
+                        // Desktop: inactive cards navigate directly when clicked anywhere
+                        if (!isMobile && !isActive) {
+                          // Handle wrap-around cases
+                          let direction: "left" | "right";
+                          if (
+                            realActiveIndex === allCards.length - 1 &&
+                            index === 0
+                          ) {
+                            // Last card active, clicking first → next (left)
+                            direction = "left";
+                          } else if (
+                            realActiveIndex === 0 &&
+                            index === allCards.length - 1
+                          ) {
+                            // First card active, clicking last → prev (right)
+                            direction = "right";
+                          } else {
+                            direction =
+                              index > realActiveIndex ? "left" : "right";
+                          }
+                          setSlideDirection(direction);
+                          activeCardIndexRef.current = newIndex;
+                          setActiveCardIndex(newIndex);
+                          setTimeout(() => setSlideDirection(null), 300);
+                          return;
+                        }
+
+                        // Mobile or active card: use left/right zone clicking
                         const rect = e.currentTarget.getBoundingClientRect();
                         const clickX = e.clientX - rect.left;
                         const cardWidth = rect.width;
                         const clickPercent = clickX / cardWidth;
 
                         // Left 40% → previous, Right 40% → next, Middle 20% → no action
-                        let newIndex = index;
                         if (clickPercent < 0.4) {
                           // Go to previous card
                           newIndex = activeCardIndex - 1;
@@ -1510,10 +1548,20 @@ export default function PrinciplesPage() {
                           marginLeft: margin,
                           marginRight: margin,
                           transformOrigin: "center center",
+                          cursor: isDragging ? "grabbing" : "grab",
                         }}
                         animate={{
                           opacity,
                           scale,
+                        }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (hasDraggedRef.current) return;
+                          // Navigate to the actual card index
+                          setSlideDirection("left");
+                          activeCardIndexRef.current = cardIndex;
+                          setActiveCardIndex(cardIndex);
+                          setTimeout(() => setSlideDirection(null), 300);
                         }}
                         transition={
                           isWrapping

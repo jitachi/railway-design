@@ -5,9 +5,17 @@ import CardsAgainstBadQuality from "./components/project-images/CardsAgainstBadQ
 import HowToBuildAPage from "./components/project-images/HowToBuildAPage";
 import SharedDefinitionOfQuality from "./components/project-images/SharedDefinitionOfQuality";
 import Branding from "./components/project-images/Branding";
+import OnConsideration from "./components/project-images/OnConsideration";
 
 // Project data
 const projects = [
+  {
+    title: "On Consideration",
+    description: "Why consideration is the foundation of good design",
+    href: "/on-consideration",
+    image: <OnConsideration />,
+    disabled: false,
+  },
   {
     title: "Cards against bad quality",
     description: "Something something about our principles",

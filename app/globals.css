@@ -230,3 +230,31 @@ a {
     margin-bottom: 24px !important;
   }
 }
+
+/* Article with indented content except H2 headings */
+.article-indented > *:not(h2) {
+  padding-left: 48px;
+}
+
+.article-indented strong {
+  font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .article-indented > *:not(h2) {
+    padding-left: 24px;
+  }
+}
+
+/* Tighter bullet spacing for lists */
+.article-indented ul li {
+  list-style: none;
+  position: relative;
+  padding-left: 1em;
+}
+
+.article-indented ul li::before {
+  content: "•";
+  position: absolute;
+  left: 0;
+}

@@ -43,12 +43,6 @@ const team = [
     twitter: "https://x.com/angelosaraceno",
     github: "https://github.com/angelosaraceno",
   },
-  {
-    name: "You?",
-    role: "We're hiring",
-    image: null,
-    isHiring: true,
-  },
 ];
 
 // Hiring data
@@ -56,7 +50,7 @@ const jobs = [
   {
     title: "Sr Product Designer",
     location: "Anywhere",
-    href: "https://railway.com/careers",
+    href: "https://railway.com/careers/Product-designer",
   },
 ];
 
@@ -87,7 +81,10 @@ export default function Home() {
       >
         <div style={{ maxWidth: "1120px", margin: "0 auto" }}>
           {/* Header */}
-          <div className="flex items-center gap-3" style={{ marginBottom: "160px" }}>
+          <div
+            className="flex items-center gap-3"
+            style={{ marginBottom: "160px" }}
+          >
             <svg
               width="28"
               height="28"
@@ -100,7 +97,9 @@ export default function Home() {
                 fill="#1C1A28"
               />
             </svg>
-            <span className="text-xl font-semibold text-gray-900 tracking-tight">Design</span>
+            <span className="text-xl font-semibold text-gray-900 tracking-tight">
+              Design
+            </span>
           </div>
 
           {/* Hero */}
@@ -138,13 +137,17 @@ export default function Home() {
                 maxWidth: "740px",
               }}
             >
-              Our principles, systems, and how we&apos;re building the future of infrastructure.
+              Our principles, systems, and how we&apos;re building the future of
+              infrastructure.
             </p>
           </div>
 
           {/* Artifacts Section */}
           <Section label="Artifacts">
-            <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "32px" }}>
+            <div
+              className="grid grid-cols-1 md:grid-cols-2"
+              style={{ gap: "32px" }}
+            >
               {artifacts.map((artifact, index) => (
                 <Link
                   key={index}
@@ -166,7 +169,12 @@ export default function Home() {
                   >
                     {artifact.title}
                   </h3>
-                  <p className="text-gray-500 mb-4" style={{ fontSize: "16px", lineHeight: "150%" }}>{artifact.description}</p>
+                  <p
+                    className="text-gray-500 mb-4"
+                    style={{ fontSize: "16px", lineHeight: "150%" }}
+                  >
+                    {artifact.description}
+                  </p>
                   <div
                     className="w-full"
                     style={{
@@ -178,113 +186,35 @@ export default function Home() {
             </div>
           </Section>
 
-          {/* Team Section */}
-          <Section label="Team">
-            <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: "32px" }}>
-              {team.filter((member) => !member.hidden).map((member, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  {/* Photo */}
-                  <div
-                    className="rounded-lg overflow-hidden flex-shrink-0"
-                    style={{
-                      width: "128px",
-                      height: "128px",
-                      backgroundColor: member.isHiring ? "rgba(0, 0, 0, 0.06)" : "rgba(0, 0, 0, 0.1)",
-                    }}
-                  >
-                    {member.image && (
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    )}
-                  </div>
-                  {/* Info */}
-                  <div>
-                    <h3
-                      style={{
-                        fontFamily: "'IBM Plex Serif', serif",
-                        fontWeight: 500,
-                        fontSize: "20px",
-                        letterSpacing: "-0.025em",
-                        color: "#111827",
-                      }}
-                    >
-                      {member.name}
-                    </h3>
-                    <p
-                      style={{
-                        fontFamily: "'Inter', sans-serif",
-                        fontWeight: 400,
-                        fontSize: "16px",
-                        color: "#6B7280",
-                      }}
-                    >
-                      {member.role}
-                    </p>
-                    <div style={{ marginTop: "6px" }}>
-                      {member.isHiring ? (
-                        <Link
-                          href="https://railway.com/careers"
-                          className="text-gray-400 hover:text-gray-600"
-                        >
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M12 5v14M5 12l7 7 7-7" />
-                          </svg>
-                        </Link>
-                      ) : (
-                        <div className="flex items-center" style={{ gap: "12px" }}>
-                          <span style={{ fontSize: "16px" }}>{member.flag}</span>
-                          {member.twitter && (
-                            <Link
-                              href={member.twitter}
-                              className="text-gray-400 hover:text-gray-600"
-                              target="_blank"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                              </svg>
-                            </Link>
-                          )}
-                          {member.github && (
-                            <Link
-                              href={member.github}
-                              className="text-gray-400 hover:text-gray-600"
-                              target="_blank"
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                              </svg>
-                            </Link>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Section>
-
-          {/* Hiring Section */}
-          <Section label="Careers" noBorder>
-            <div className="space-y-2">
+          {/* Careers Section */}
+          <Section label="Careers">
+            <div className="space-y-8">
+              {/* Video */}
+              <div
+                className="w-full rounded-xl overflow-hidden"
+                style={{
+                  aspectRatio: "16 / 9",
+                  boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.06)",
+                }}
+              >
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/LeQFS4yqGek?si=y3_NmAOaKpAo8DKF"
+                  title="YouTube video player"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerPolicy="strict-origin-when-cross-origin"
+                  allowFullScreen
+                />
+              </div>
+              {/* Job Listings */}
               {jobs.map((job, index) => (
                 <Link
                   key={index}
                   href={job.href}
                   target="_blank"
-                  className="flex items-center justify-between p-5 rounded-xl transition-all hover:bg-white/80"
+                  className="flex items-center justify-between py-3 px-5 rounded-xl transition-all hover:bg-white/80"
                   style={{
                     backgroundColor: "rgba(255, 255, 255, 0.5)",
                     boxShadow: "0 0 0 1px rgba(0, 0, 0, 0.06)",
@@ -304,6 +234,126 @@ export default function Home() {
                   <span className="text-sm text-gray-400">{job.location}</span>
                 </Link>
               ))}
+            </div>
+          </Section>
+
+          {/* Team Section */}
+          <Section label="Team" noBorder>
+            <div
+              className="grid grid-cols-1 md:grid-cols-2"
+              style={{ gap: "32px" }}
+            >
+              {team
+                .filter((member) => !member.hidden)
+                .map((member, index) => (
+                  <div key={index} className="flex items-center gap-4">
+                    {/* Photo */}
+                    <div
+                      className="rounded-lg overflow-hidden flex-shrink-0"
+                      style={{
+                        width: "128px",
+                        height: "128px",
+                        backgroundColor: member.isHiring
+                          ? "rgba(0, 0, 0, 0.06)"
+                          : "rgba(0, 0, 0, 0.1)",
+                      }}
+                    >
+                      {member.image && (
+                        <img
+                          src={member.image}
+                          alt={member.name}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    {/* Info */}
+                    <div>
+                      <h3
+                        style={{
+                          fontFamily: "'IBM Plex Serif', serif",
+                          fontWeight: 500,
+                          fontSize: "20px",
+                          letterSpacing: "-0.025em",
+                          color: "#111827",
+                        }}
+                      >
+                        {member.name}
+                      </h3>
+                      <p
+                        style={{
+                          fontFamily: "'Inter', sans-serif",
+                          fontWeight: 400,
+                          fontSize: "16px",
+                          color: "#6B7280",
+                        }}
+                      >
+                        {member.role}
+                      </p>
+                      <div style={{ marginTop: "6px" }}>
+                        {member.isHiring ? (
+                          <Link
+                            href="https://railway.com/careers"
+                            className="text-gray-400 hover:text-gray-600"
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M12 5v14M5 12l7 7 7-7" />
+                            </svg>
+                          </Link>
+                        ) : (
+                          <div
+                            className="flex items-center"
+                            style={{ gap: "12px" }}
+                          >
+                            <span style={{ fontSize: "16px" }}>
+                              {member.flag}
+                            </span>
+                            {member.twitter && (
+                              <Link
+                                href={member.twitter}
+                                className="text-gray-400 hover:text-gray-600"
+                                target="_blank"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                              </Link>
+                            )}
+                            {member.github && (
+                              <Link
+                                href={member.github}
+                                className="text-gray-400 hover:text-gray-600"
+                                target="_blank"
+                              >
+                                <svg
+                                  width="16"
+                                  height="16"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                                </svg>
+                              </Link>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
             </div>
           </Section>
         </div>
@@ -331,7 +381,10 @@ function Section({
         borderBottom: noBorder ? "none" : undefined,
       }}
     >
-      <div className="flex flex-col gap-6 lg:grid lg:gap-8" style={{ gridTemplateColumns: "repeat(12, 1fr)" }}>
+      <div
+        className="flex flex-col gap-6 lg:grid lg:gap-8"
+        style={{ gridTemplateColumns: "repeat(12, 1fr)" }}
+      >
         <div className="lg:col-span-4">
           <h2
             style={{

@@ -28,7 +28,31 @@ yarn-error.log*
 # vercel
 .vercel
 
+# 3D models (heavy assets for local dev)
+/public/models/
+
+# 3D models (heavy assets for local dev)
+/public/models/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
+# 3D models (heavy assets for local dev)
+/public/models/
+
+# 3D models (heavy assets)
+/public/models/
+
+# 3D models (heavy assets for local dev)
+/public/models/
+
+# 3D models (heavy files)
+/public/models/
+# 3D models (heavy assets for local development)
+/public/models/
+# 3D models (heavy assets for local dev)
+/public/models/# 3D models (heavy assets for local dev)
+/public/models/
+# 3D models (heavy assets for local dev)
+/public/models/

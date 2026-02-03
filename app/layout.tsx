@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Design at Railway",
-  description: "Our principles, systems, and how we're building the future of infrastructure",
+  title: "Railway Design",
+  description: "Design system and guidelines",
 };
 
 export default function RootLayout({

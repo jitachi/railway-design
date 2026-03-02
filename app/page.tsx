@@ -243,7 +243,6 @@ export default function Home() {
               style={{ gap: "32px" }}
             >
               {team
-                .filter((member) => !member.hidden)
                 .map((member, index) => (
                   <div key={index} className="flex items-center gap-4">
                     {/* Photo */}

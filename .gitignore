@@ -31,3 +31,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# 3D model source files (OBJ, MTL, TGA) - GLB is tracked
+/public/models/

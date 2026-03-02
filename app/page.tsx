@@ -33,7 +33,6 @@ const team = [
     flag: "🇺🇸",
     twitter: "https://x.com/gennydee",
     github: "https://github.com/gennydee",
-    hidden: true,
   },
   {
     name: "Angelo Saraceno",
